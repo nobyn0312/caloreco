@@ -1,0 +1,22 @@
+{
+    "workbench.colorCustomizations": {
+      "activityBar.activeBackground": "#FFD966",       // 明るめのイエロー
+      "activityBar.background": "#FFEB99",             // 優しいクリーム色
+      "activityBar.foreground": "#2B7A78",             // 落ち着いた青緑
+      "activityBar.inactiveForeground": "#2B7A78",
+      "activityBarBadge.background": "#FF6F61",        // アクセントに柔らかい赤
+      "activityBarBadge.foreground": "#FFFFFF",
+      "commandCenter.border": "#2B7A78",
+      "sash.hoverBorder": "#FF9900",
+      "statusBar.background": "#FFD966",
+      "statusBar.foreground": "#2B7A78",
+      "statusBarItem.hoverBackground": "#FF9900",
+      "statusBarItem.remoteBackground": "#2B7A78",
+      "statusBarItem.remoteForeground": "#FFFFFF",
+      "titleBar.activeBackground": "#FFD966",
+      "titleBar.activeForeground": "#2B7A78",
+      "titleBar.inactiveBackground": "#FFE699",
+      "titleBar.inactiveForeground": "#2B7A78"
+    }
+  }
+  

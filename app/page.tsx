@@ -494,7 +494,7 @@ export default function Home() {
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-neutral-900">
-            Calreco
+            Caloreco
           </h1>
           <p className="mt-2 text-sm text-neutral-600">
             カロレコAIが、毎日のカロリー/PFCを推定します。

@@ -1,4 +1,4 @@
-# Calreco
+# Caloreco
 
 おすすめ構成（実装中）:
 

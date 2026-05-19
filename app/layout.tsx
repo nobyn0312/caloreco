@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Calreco",
+  title: "Caloreco",
   description: "AI 食事記録と栄養トラッキング",
 };
 

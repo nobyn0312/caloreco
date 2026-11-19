@@ -581,7 +581,7 @@ export default function Home() {
         <div className="grid items-center gap-4 md:grid-cols-2 md:gap-10">
           <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
             <Image
-              src="/images/top.png"
+              src="/images/top.jpg"
               alt="Caloreco イラスト"
               width={2048}
               height={2048}

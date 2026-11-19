@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   WeeklyTrendChart,
@@ -15,6 +16,7 @@ type MeUser = {
   gender: string | null;
   heightCm: number | null;
   weightKg: number | null;
+  targetWeightKg: number | null;
   targetProteinG: number | null;
   targetFatG: number | null;
   targetCarbsG: number | null;
@@ -127,8 +129,19 @@ export default function AccountPage() {
       <div className="mx-auto max-w-lg space-y-4 sm:space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>アカウント</CardTitle>
-            <p className="text-sm text-neutral-600">登録したプロフィールと、今後 AI が設定する目標 PFC の枠です。</p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <CardTitle>アカウント</CardTitle>
+                <p className="mt-1.5 text-sm text-neutral-600">
+                  登録したプロフィールと、今後 AI が設定する目標 PFC の枠です。
+                </p>
+              </div>
+              <Link href="/account/edit" className="shrink-0">
+                <Button type="button" variant="secondary" className="w-full sm:w-auto">
+                  アカウント編集
+                </Button>
+              </Link>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {error ? <p className="text-sm text-red-700">{error}</p> : null}
@@ -160,6 +173,14 @@ export default function AccountPage() {
                   value={
                     user.weightKg != null
                       ? `${formatBodyNumber(user.weightKg)} kg`
+                      : "未設定"
+                  }
+                />
+                <ProfileRow
+                  label="目標体重"
+                  value={
+                    user.targetWeightKg != null
+                      ? `${formatBodyNumber(user.targetWeightKg)} kg`
                       : "未設定"
                   }
                 />

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { generateContentAuto } from "@/lib/gemini";
 import { prisma } from "@/lib/prisma";
 import {
   ACTIVITY_LABEL,
@@ -210,14 +210,11 @@ export async function POST(req: NextRequest) {
   });
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: process.env.GEMINI_MODEL?.trim() || "gemini-3.8-flash",
-    });
-
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: { responseMimeType: "application/json" },
+    const { result, model } = await generateContentAuto({
+      apiKey,
+      prompt,
+      responseMimeType: "application/json",
+      timeoutMs: 12_000,
     });
 
     const raw = extractText(result);
@@ -226,7 +223,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error: "AI からの提案を解析できませんでした。もう一度お試しください。",
-          ...(isDev ? { raw } : {}),
+          ...(isDev ? { raw, model } : {}),
         },
         { status: 502 }
       );
@@ -236,6 +233,7 @@ export async function POST(req: NextRequest) {
       assistantMessage: parsedResult.assistantMessage,
       plan: parsedResult.plan,
       input: parsed.value,
+      ...(isDev ? { model } : {}),
     });
   } catch (error) {
     console.error("goal suggest error:", error);

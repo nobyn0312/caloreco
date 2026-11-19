@@ -445,13 +445,21 @@ export default function Home() {
         { role: "user", content: message.trim() },
       ];
 
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ messages: nextMessages }),
-      });
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), 55_000);
+      let response: Response;
+      try {
+        response = await fetch("/api/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ messages: nextMessages }),
+          signal: controller.signal,
+        });
+      } finally {
+        window.clearTimeout(timeoutId);
+      }
 
       const data = await response.json();
 
@@ -507,8 +515,12 @@ export default function Home() {
           `${typeof data.error === "string" ? data.error : "エラーが発生しました"}${detail}${raw}`
         );
       }
-    } catch {
-      setChatError("通信エラーが発生しました");
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "AbortError") {
+        setChatError("応答が時間内に返りませんでした。少し待って再送信してください。");
+      } else {
+        setChatError("通信エラーが発生しました");
+      }
     } finally {
       setIsLoading(false);
     }

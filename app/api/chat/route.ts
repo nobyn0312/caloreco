@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import {
+  formatUnknownError,
+  generateContentAuto,
+  getUpstreamStatus,
+} from "@/lib/gemini";
 import { coerceNutrition, type NutritionJson } from "@/lib/mealNutrition";
 
 const MAX_MESSAGES = 24;
+
+/** Vercel Hobby は短め。Pro なら最大60秒まで延ばせる */
+export const maxDuration = 60;
+export const runtime = "nodejs";
 
 function extractTextFromGeminiResponse(result: {
   response: {
@@ -36,29 +44,6 @@ function extractTextFromGeminiResponse(result: {
   }
 
   return "回答を生成できませんでした。";
-}
-
-function formatUnknownError(error: unknown): string {
-  if (error instanceof Error) return error.message;
-  if (typeof error === "object" && error !== null && "message" in error) {
-    return String((error as { message: unknown }).message);
-  }
-  return String(error);
-}
-
-function getUpstreamStatus(error: unknown): number | null {
-  if (!error || typeof error !== "object") return null;
-  const anyErr = error as { status?: unknown; cause?: unknown };
-  if (typeof anyErr.status === "number") return anyErr.status;
-  if (anyErr.cause && typeof anyErr.cause === "object") {
-    const c = anyErr.cause as { status?: unknown };
-    if (typeof c.status === "number") return c.status;
-  }
-  return null;
-}
-
-async function sleep(ms: number) {
-  await new Promise((r) => setTimeout(r, ms));
 }
 
 /** Gemini の JSON（assistantMessage + foods + total + notes）を検証して返す */
@@ -208,45 +193,13 @@ export async function POST(request: NextRequest) {
       "上記の会話と入力全体を踏まえて食事を推定し、指定の JSON のみを返してください。",
     ].join("\n");
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: process.env.GEMINI_MODEL?.trim() || "gemini-3.8-flash",
+    // GEMINI_MODEL=auto（または未設定）なら速さ優先でモデルを順に試す
+    const { result, model } = await generateContentAuto({
+      apiKey,
+      prompt,
+      responseMimeType: "application/json",
+      timeoutMs: 12_000,
     });
-
-    const attempts = 3;
-    let lastError: unknown = null;
-    let result:
-      | Awaited<ReturnType<typeof model.generateContent>>
-      | null = null;
-
-    for (let i = 0; i < attempts; i++) {
-      try {
-        result = await model.generateContent({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: "application/json" },
-        });
-        break;
-      } catch (e) {
-        lastError = e;
-        const status = getUpstreamStatus(e);
-        if (status === 503 && i < attempts - 1) {
-          await sleep(300 * (i + 1));
-          continue;
-        }
-        throw e;
-      }
-    }
-
-    if (!result) {
-      const details = formatUnknownError(lastError);
-      return NextResponse.json(
-        {
-          error: "AIが混雑していて応答できませんでした。少し待って再試行してください。",
-          ...(isDev ? { details } : {}),
-        },
-        { status: 503, headers: { "Retry-After": "5" } }
-      );
-    }
 
     const raw = extractTextFromGeminiResponse(result);
     const parsed = tryParseAssistantNutrition(raw);
@@ -255,7 +208,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: "推定結果の解析に失敗しました。もう一度お試しください。",
-          ...(isDev ? { raw } : {}),
+          ...(isDev ? { raw, model } : {}),
         },
         { status: 502 }
       );
@@ -264,26 +217,27 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       assistantMessage: parsed.assistantMessage,
       nutrition: parsed.nutrition,
+      ...(isDev ? { model } : {}),
     });
   } catch (error) {
     console.error("Gemini API error:", error);
     const details = formatUnknownError(error);
     const status = getUpstreamStatus(error);
-    if (status === 503) {
+    if (status === 503 || (error instanceof Error && error.message.includes("timed out"))) {
       return NextResponse.json(
         {
           error:
-            "Gemini が混雑しています（503）。少し待ってからもう一度送信してください。",
-          ...(isDev ? { details } : {}),
+            "Gemini が混雑しているかタイムアウトしました。少し待ってからもう一度送信してください。",
+          details,
         },
-        { status: 503, headers: { "Retry-After": "5" } }
+        { status: status === 503 ? 503 : 504, headers: { "Retry-After": "5" } }
       );
     }
 
     return NextResponse.json(
       {
         error: "AIからの応答取得に失敗しました",
-        ...(isDev ? { details } : {}),
+        details,
       },
       { status: 500 }
     );

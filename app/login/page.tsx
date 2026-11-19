@@ -20,7 +20,7 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(() => {
     if (!authError) return null;
     if (authError === "AccessDenied") {
-      return "Google ログインは拒否されました。DATABASE_URL / DIRECT_URL（パスワード含む）を確認し、npm run dev を再起動してからもう一度お試しください。ユーザー作成に失敗するとこのエラーになります。";
+      return "Google ログインは拒否されました。Vercel の DATABASE_URL / DIRECT_URL を確認し、Redeploy 後にもう一度お試しください。DB へのユーザー作成に失敗するとこのエラーになります。";
     }
     if (authError === "OAuthAccountNotLinked") {
       return "このメールは別の方法で登録済みの可能性があります。";
@@ -38,7 +38,17 @@ function LoginForm() {
     void (async () => {
       try {
         const providers = await getProviders();
-        setGoogleAvailable(Boolean(providers?.google));
+        // providers が null のときは設定エラー（NEXTAUTH_URL 不一致など）で、
+        // 「Google未設定」とは限らない
+        if (providers == null) {
+          setGoogleAvailable(false);
+          setError((prev) =>
+            prev ??
+              "認証サーバー設定エラーです。Vercel の NEXTAUTH_URL が今開いている本番ドメインと一致しているか確認してください。"
+          );
+          return;
+        }
+        setGoogleAvailable(Boolean(providers.google));
       } catch {
         setGoogleAvailable(false);
       }

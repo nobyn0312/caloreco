@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, Fragment } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
@@ -20,14 +21,12 @@ import {
   formatAssistantTurnForHistory,
   displayAssistantHistoryContent,
 } from "@/lib/chatHistory";
-
-type MealLog = {
-  id: number;
-  rawInput: string;
-  /** Prisma Json として返るため unknown */
-  result: unknown;
-  createdAt: string;
-};
+import {
+  clearMealLogCache,
+  readMealLogCache,
+  writeMealLogCache,
+} from "@/lib/mealLogCache";
+import type { MealLog } from "@/lib/mealLogTypes";
 
 type RowDraft = {
   rawInput: string;
@@ -86,7 +85,8 @@ type PendingRecord = {
 };
 
 export default function Home() {
-  const { status: sessionStatus } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
+  const userId = session?.user?.id ?? null;
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [logs, setLogs] = useState<MealLog[]>([]);
@@ -100,6 +100,7 @@ export default function Home() {
   const [expandedFoodRows, setExpandedFoodRows] = useState<Set<number>>(new Set());
   const [expandedContentRows, setExpandedContentRows] = useState<Set<number>>(new Set());
   const [pendingFoodsExpanded, setPendingFoodsExpanded] = useState(false);
+  const [isRevalidatingLogs, setIsRevalidatingLogs] = useState(false);
 
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [editing, setEditing] = useState<Set<number>>(new Set());
@@ -109,8 +110,11 @@ export default function Home() {
   const [isSaving, setIsSaving] = useState(false);
 
   const selectAllRef = useRef<HTMLInputElement>(null);
+  const hydratedUserRef = useRef<string | null>(null);
 
-  const refreshLogs = useCallback(async () => {
+  const refreshLogs = useCallback(async (opts?: { background?: boolean }) => {
+    const background = opts?.background === true;
+    if (background) setIsRevalidatingLogs(true);
     try {
       const res = await fetch("/api/memo", {
         cache: "no-store",
@@ -120,6 +124,7 @@ export default function Home() {
 
       if (res.status === 401) {
         setLogs([]);
+        clearMealLogCache();
         setDbError(
           typeof data.error === "string"
             ? data.error
@@ -131,6 +136,7 @@ export default function Home() {
       if (res.ok && Array.isArray(data.logs)) {
         setLogs(data.logs);
         setDbError(null);
+        if (userId) writeMealLogCache(userId, data.logs);
         return;
       }
 
@@ -139,21 +145,45 @@ export default function Home() {
           ? data.error
           : "記録一覧を読み込めませんでした。"
       );
-      if (Array.isArray(data.logs)) setLogs(data.logs);
+      if (Array.isArray(data.logs)) {
+        setLogs(data.logs);
+        if (userId) writeMealLogCache(userId, data.logs);
+      }
     } catch {
-      setDbError("記録一覧の通信に失敗しました。");
+      // キャッシュ表示中ならエラーを強く出さない
+      if (!background) {
+        setDbError("記録一覧の通信に失敗しました。");
+      }
+    } finally {
+      if (background) setIsRevalidatingLogs(false);
     }
-  }, []);
+  }, [userId]);
 
+  // 再訪問時: localStorage から即描画
   useEffect(() => {
-    void refreshLogs();
-  }, [refreshLogs]);
-
-  useEffect(() => {
-    if (sessionStatus === "authenticated") {
-      void refreshLogs();
+    if (!userId) return;
+    if (hydratedUserRef.current === userId) return;
+    hydratedUserRef.current = userId;
+    const cached = readMealLogCache(userId);
+    if (cached && cached.length > 0) {
+      setLogs(cached);
+      setDbError(null);
     }
-  }, [sessionStatus, refreshLogs]);
+  }, [userId]);
+
+  // ログイン確定後に裏で再取得（二重取得しない）
+  useEffect(() => {
+    if (sessionStatus === "loading") return;
+    if (sessionStatus !== "authenticated" || !userId) {
+      if (sessionStatus === "unauthenticated") {
+        hydratedUserRef.current = null;
+        setLogs([]);
+        setDbError("食事記録の保存・一覧にはログインが必要です。");
+      }
+      return;
+    }
+    void refreshLogs({ background: true });
+  }, [sessionStatus, userId, refreshLogs]);
 
   useEffect(() => {
     const ids = new Set(logs.map((l) => l.id));
@@ -548,17 +578,30 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-neutral-50 px-4 py-4 sm:px-6 sm:py-6">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 sm:gap-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl">
-            Caloreco
-          </h1>
-          <p className="mt-1.5 text-sm leading-relaxed text-neutral-600 sm:mt-2">
-            カロレコAIが、毎日のカロリー/PFCを推定します。
-            <span className="hidden sm:inline">
-              {" "}
-              推定後も下の入力欄に続きを書いて送信すると、直前までの内容を踏まえて再推定します。
-            </span>
-          </p>
+        <div className="grid items-center gap-4 md:grid-cols-2 md:gap-10">
+          <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
+            <Image
+              src="/images/top.png"
+              alt="Caloreco イラスト"
+              width={2048}
+              height={2048}
+              priority
+              className="h-auto w-full object-cover"
+              sizes="(max-width: 768px) 100vw, 32rem"
+            />
+          </div>
+          <div className="md:flex md:min-h-[16rem] md:flex-col md:justify-center">
+            <h1 className="text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl md:text-5xl">
+              Caloreco
+            </h1>
+            <p className="mt-2 text-sm leading-relaxed text-neutral-600 md:mt-4 md:text-base">
+              カロレコAIが、毎日のカロリー/PFCを推定します。
+              <span className="hidden sm:inline">
+                {" "}
+                推定後も下の入力欄に続きを書いて送信すると、直前までの内容を踏まえて再推定します。
+              </span>
+            </p>
+          </div>
         </div>
 
         {dbError ? (
@@ -861,9 +904,18 @@ export default function Home() {
           <CardHeader>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <CardTitle>記録（最新30件）</CardTitle>
-              <Button variant="secondary" onClick={refreshLogs} disabled={isLoading}>
-                再読み込み
-              </Button>
+              <div className="flex items-center gap-2">
+                {isRevalidatingLogs ? (
+                  <span className="text-xs text-neutral-500">更新中…</span>
+                ) : null}
+                <Button
+                  variant="secondary"
+                  onClick={() => void refreshLogs({ background: true })}
+                  disabled={isLoading || isRevalidatingLogs}
+                >
+                  再読み込み
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">

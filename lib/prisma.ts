@@ -3,6 +3,8 @@ import { PrismaClient } from "@prisma/client";
 declare global {
   // eslint-disable-next-line no-var
   var prisma: PrismaClient | undefined;
+  // eslint-disable-next-line no-var
+  var prismaDatabaseUrl: string | undefined;
 }
 
 /** After `schema.prisma` changes, dev HMR can keep a stale PrismaClient without new delegates (e.g. `user`). */
@@ -18,17 +20,24 @@ const createClient = () =>
   });
 
 export const prisma: PrismaClient = (() => {
+  const currentUrl = process.env.DATABASE_URL ?? "";
   const cached = globalThis.prisma;
-  if (cached && hasUserDelegate(cached)) {
+  const urlChanged =
+    typeof globalThis.prismaDatabaseUrl === "string" &&
+    globalThis.prismaDatabaseUrl !== currentUrl;
+
+  if (cached && hasUserDelegate(cached) && !urlChanged) {
     return cached;
   }
+
   if (cached && process.env.NODE_ENV !== "production") {
     void cached.$disconnect();
   }
+
   const client = createClient();
   if (process.env.NODE_ENV !== "production") {
     globalThis.prisma = client;
+    globalThis.prismaDatabaseUrl = currentUrl;
   }
   return client;
 })();
-

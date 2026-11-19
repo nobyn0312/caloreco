@@ -20,7 +20,7 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(() => {
     if (!authError) return null;
     if (authError === "AccessDenied") {
-      return "Google ログインは拒否されました。PostgreSQL が起動しているか、`npx prisma migrate deploy` 済みかを確認してください（ユーザー作成に失敗するとこのエラーになります）。";
+      return "Google ログインは拒否されました。DATABASE_URL / DIRECT_URL（パスワード含む）を確認し、npm run dev を再起動してからもう一度お試しください。ユーザー作成に失敗するとこのエラーになります。";
     }
     if (authError === "OAuthAccountNotLinked") {
       return "このメールは別の方法で登録済みの可能性があります。";

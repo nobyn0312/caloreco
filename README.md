@@ -5,7 +5,7 @@
 - Front: Next.js App Router
 - UI: Tailwind + shadcn/ui（最小コンポーネント）
 - API: Next.js Route Handler
-- AI: Gemini 2.5 Flash
+- AI: Gemini 3.8 Flash
 - DB: PostgreSQL
 - ORM: Prisma
 

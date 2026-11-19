@@ -154,18 +154,16 @@ export const authOptions: NextAuthOptions = {
       if (account?.provider === "google") {
         const email = profile?.email;
         const googleId = account.providerAccountId;
-        if (email || googleId) {
-          const dbUser =
-            (googleId
-              ? await prisma.user.findUnique({ where: { googleId } })
-              : null) ??
-            (email ? await prisma.user.findUnique({ where: { email } }) : null);
-          if (dbUser) {
-            token.id = dbUser.id;
-            token.sub = dbUser.id;
-            token.name = dbUser.username;
-            token.email = dbUser.email;
-          }
+        if (email && googleId) {
+          const dbUser = await findOrCreateGoogleUser({
+            googleId,
+            email,
+            name: profile?.name,
+          });
+          token.id = dbUser.id;
+          token.sub = dbUser.id;
+          token.name = dbUser.username;
+          token.email = dbUser.email;
         }
       }
 

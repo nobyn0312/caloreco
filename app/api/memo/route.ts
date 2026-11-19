@@ -13,6 +13,26 @@ async function requireUserId(): Promise<{ ok: true; userId: string } | { ok: fal
       res: NextResponse.json({ error: "ログインが必要です", logs: [] }, { status: 401 }),
     };
   }
+
+  // DB 切替後など、JWT の userId が現行 DB に無いと MealLog 保存で FK 違反になる
+  const exists = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true },
+  });
+  if (!exists) {
+    return {
+      ok: false,
+      res: NextResponse.json(
+        {
+          error:
+            "ログイン情報が現在のデータベースと一致しません。一度ログアウトし、Google で再ログインしてください。",
+          logs: [],
+        },
+        { status: 401 }
+      ),
+    };
+  }
+
   return { ok: true, userId: session.user.id };
 }
 
@@ -30,6 +50,12 @@ function dbUnavailableMessage(error: unknown): string | null {
     error.code === "P2021"
   ) {
     return "DB にテーブルがありません（マイグレーション未適用の可能性）。`DATABASE_URL` が指す PostgreSQL に `npx prisma migrate deploy` を実行してスキーマを作成してください。";
+  }
+  if (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === "P2003"
+  ) {
+    return "ユーザーが DB に存在しません。ログアウトして Google で再ログインしてください。";
   }
   return null;
 }

@@ -50,7 +50,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 p-6">
+    <div className="min-h-screen bg-neutral-50 px-4 py-4 sm:px-6 sm:py-6">
       <div className="mx-auto w-full max-w-md">
         <Card>
           <CardHeader>

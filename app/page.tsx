@@ -527,15 +527,18 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 p-6">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+    <div className="min-h-screen bg-neutral-50 px-4 py-4 sm:px-6 sm:py-6">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 sm:gap-6">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-neutral-900">
+          <h1 className="text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl">
             Caloreco
           </h1>
-          <p className="mt-2 text-sm text-neutral-600">
+          <p className="mt-1.5 text-sm leading-relaxed text-neutral-600 sm:mt-2">
             カロレコAIが、毎日のカロリー/PFCを推定します。
-            推定後も下の入力欄に続きを書いて送信すると、直前までの内容を踏まえて再推定します。
+            <span className="hidden sm:inline">
+              {" "}
+              推定後も下の入力欄に続きを書いて送信すると、直前までの内容を踏まえて再推定します。
+            </span>
           </p>
         </div>
 
@@ -600,11 +603,15 @@ export default function Home() {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
             />
-            <div className="flex items-center gap-3">
-              <Button onClick={handleSubmit} disabled={isLoading || !message.trim()}>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <Button
+                className="w-full sm:w-auto"
+                onClick={handleSubmit}
+                disabled={isLoading || !message.trim()}
+              >
                 {isLoading ? "送信中..." : "送信"}
               </Button>
-              <span className="text-xs text-neutral-500">
+              <span className="hidden text-xs text-neutral-500 sm:inline">
                 API: <code className="rounded bg-neutral-100 px-1 py-0.5">/api/chat</code>
               </span>
             </div>
@@ -616,7 +623,7 @@ export default function Home() {
             ) : null}
 
             {pendingRecord ? (
-              <div className="space-y-4 rounded-md border border-emerald-200 bg-emerald-50/40 p-4">
+              <div className="space-y-4 rounded-md border border-emerald-200 bg-emerald-50/40 p-3 sm:p-4">
                 <div>
                   <h3 className="text-sm font-semibold text-neutral-900">AIの回答</h3>
                   <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-neutral-800">
@@ -841,7 +848,7 @@ export default function Home() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-neutral-50/80 p-4">
+            <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-neutral-50/80 p-3 sm:p-4">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-sm text-neutral-600">
                   選択: <strong>{selected.size}</strong> 件
@@ -908,8 +915,8 @@ export default function Home() {
               ) : null}
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="min-w-[58rem] w-full border-collapse overflow-hidden rounded-lg border border-neutral-200 bg-white">
+            <div className="-mx-1 overflow-x-auto sm:mx-0">
+              <table className="min-w-[58rem] w-full border-collapse overflow-hidden rounded-lg border border-neutral-200 bg-white text-sm">
                 <thead className="bg-neutral-900 text-white">
                   <tr>
                     <th className="w-10 px-2 py-3 text-center text-sm font-medium">

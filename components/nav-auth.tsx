@@ -13,7 +13,7 @@ export function NavAuth() {
 
   if (!session?.user) {
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
         <Link href="/login">
           <Button variant="secondary" size="sm">
             ログイン
@@ -27,12 +27,12 @@ export function NavAuth() {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="text-sm text-neutral-700">
+    <div className="flex min-w-0 items-center justify-end gap-1.5 sm:gap-2">
+      <span className="hidden min-w-0 truncate text-sm text-neutral-700 sm:inline">
         <span className="text-neutral-500">ログイン中:</span>{" "}
         <strong>{session.user.name}</strong>
       </span>
-      <Link href="/account">
+      <Link href="/account" className="shrink-0">
         <Button variant="secondary" size="sm">
           アカウント
         </Button>
@@ -41,6 +41,7 @@ export function NavAuth() {
         type="button"
         variant="outline"
         size="sm"
+        className="shrink-0"
         onClick={() => void signOut({ callbackUrl: "/" })}
       >
         ログアウト

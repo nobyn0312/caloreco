@@ -105,13 +105,13 @@ export default function AccountPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-neutral-50 p-6 text-center text-sm text-neutral-600">読み込み中…</div>
+      <div className="min-h-screen bg-neutral-50 px-4 py-4 text-center text-sm text-neutral-600 sm:px-6 sm:py-6">読み込み中…</div>
     );
   }
 
   if (status === "unauthenticated") {
     return (
-      <div className="min-h-screen bg-neutral-50 p-6">
+      <div className="min-h-screen bg-neutral-50 px-4 py-4 sm:px-6 sm:py-6">
         <div className="mx-auto max-w-md text-center">
           <p className="text-neutral-700">ログインが必要です。</p>
           <Link href="/login" className="mt-4 inline-block font-medium text-neutral-900 underline">
@@ -123,8 +123,8 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 p-6">
-      <div className="mx-auto max-w-lg space-y-6">
+    <div className="min-h-screen bg-neutral-50 px-4 py-4 sm:px-6 sm:py-6">
+      <div className="mx-auto max-w-lg space-y-4 sm:space-y-6">
         <Card>
           <CardHeader>
             <CardTitle>アカウント</CardTitle>

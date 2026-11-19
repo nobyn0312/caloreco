@@ -92,7 +92,7 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 p-6">
+    <div className="min-h-screen bg-neutral-50 px-4 py-4 sm:px-6 sm:py-6">
       <div className="mx-auto w-full max-w-md">
         <Card>
           <CardHeader>
@@ -170,7 +170,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-neutral-50 p-6 text-center text-sm">読み込み中…</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-neutral-50 px-4 py-4 text-center text-sm sm:px-6 sm:py-6">読み込み中…</div>}>
       <LoginForm />
     </Suspense>
   );

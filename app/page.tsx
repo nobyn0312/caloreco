@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MealLogCards } from "@/components/MealLogCards";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import {
@@ -97,6 +98,7 @@ export default function Home() {
   const [isSavingRecord, setIsSavingRecord] = useState(false);
   const [chatTurns, setChatTurns] = useState<ChatTurn[]>([]);
   const [expandedFoodRows, setExpandedFoodRows] = useState<Set<number>>(new Set());
+  const [expandedContentRows, setExpandedContentRows] = useState<Set<number>>(new Set());
   const [pendingFoodsExpanded, setPendingFoodsExpanded] = useState(false);
 
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -259,6 +261,23 @@ export default function Home() {
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
+    });
+  };
+
+  const toggleContentRow = (id: number) => {
+    setExpandedContentRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const patchDraft = (id: number, patch: Partial<RowDraft>) => {
+    setDrafts((prev) => {
+      const cur = prev[id];
+      if (!cur) return prev;
+      return { ...prev, [id]: { ...cur, ...patch } };
     });
   };
 
@@ -850,6 +869,17 @@ export default function Home() {
           <CardContent className="space-y-4">
             <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-neutral-50/80 p-3 sm:p-4">
               <div className="flex flex-wrap items-center gap-2">
+                <label className="flex items-center gap-2 text-sm text-neutral-700 md:hidden">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-neutral-400"
+                    checked={allSelected}
+                    onChange={toggleSelectAll}
+                    disabled={!logs.length}
+                    aria-label="すべて選択"
+                  />
+                  すべて選択
+                </label>
                 <span className="text-sm text-neutral-600">
                   選択: <strong>{selected.size}</strong> 件
                   {editing.size > 0 ? (
@@ -915,7 +945,22 @@ export default function Home() {
               ) : null}
             </div>
 
-            <div className="-mx-1 overflow-x-auto sm:mx-0">
+            <MealLogCards
+              logs={logs}
+              selected={selected}
+              editing={editing}
+              drafts={drafts}
+              expandedFoodRows={expandedFoodRows}
+              expandedContentRows={expandedContentRows}
+              dbError={dbError}
+              onToggleSelect={toggleSelect}
+              onToggleFoodDetail={toggleFoodDetailRow}
+              onToggleContent={toggleContentRow}
+              onCancelRowEdit={cancelRowEdit}
+              onDraftChange={patchDraft}
+            />
+
+            <div className="hidden overflow-x-auto md:block">
               <table className="min-w-[58rem] w-full border-collapse overflow-hidden rounded-lg border border-neutral-200 bg-white text-sm">
                 <thead className="bg-neutral-900 text-white">
                   <tr>

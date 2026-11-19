@@ -11,10 +11,10 @@ import {
 
 type MeUser = {
   username: string;
-  age: number;
-  gender: string;
-  heightCm: number;
-  weightKg: number;
+  age: number | null;
+  gender: string | null;
+  heightCm: number | null;
+  weightKg: number | null;
   targetProteinG: number | null;
   targetFatG: number | null;
   targetCarbsG: number | null;
@@ -135,10 +135,34 @@ export default function AccountPage() {
             {user ? (
               <dl className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white">
                 <ProfileRow label="名前" value={user.username} emphasized />
-                <ProfileRow label="性別" value={genderLabel[user.gender] ?? user.gender} />
-                <ProfileRow label="年齢" value={`${user.age} 歳`} />
-                <ProfileRow label="身長" value={`${formatBodyNumber(user.heightCm)} cm`} />
-                <ProfileRow label="体重" value={`${formatBodyNumber(user.weightKg)} kg`} />
+                <ProfileRow
+                  label="性別"
+                  value={
+                    user.gender
+                      ? genderLabel[user.gender] ?? user.gender
+                      : "未設定（Googleログイン直後など）"
+                  }
+                />
+                <ProfileRow
+                  label="年齢"
+                  value={user.age != null ? `${user.age} 歳` : "未設定"}
+                />
+                <ProfileRow
+                  label="身長"
+                  value={
+                    user.heightCm != null
+                      ? `${formatBodyNumber(user.heightCm)} cm`
+                      : "未設定"
+                  }
+                />
+                <ProfileRow
+                  label="体重"
+                  value={
+                    user.weightKg != null
+                      ? `${formatBodyNumber(user.weightKg)} kg`
+                      : "未設定"
+                  }
+                />
               </dl>
             ) : (
               !error && <p className="text-sm text-neutral-600">読み込み中…</p>

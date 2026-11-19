@@ -17,11 +17,15 @@ model Memo {
 model User {
   id             String    @id @default(cuid())
   username       String    @unique
-  passwordHash   String
-  age            Int
-  gender         String
-  heightCm       Float
-  weightKg       Float
+  /// Google ログイン時は null（パスワード未設定）
+  passwordHash   String?
+  email          String?   @unique
+  googleId       String?   @unique
+  /// Google 初回ログイン時は未設定のまま。目標提案前に /account で埋める想定
+  age            Int?
+  gender         String?
+  heightCm       Float?
+  weightKg       Float?
   /// AI が後から設定する目標 PFC（g/日）。現状は null
   targetProteinG Float?
   targetFatG     Float?

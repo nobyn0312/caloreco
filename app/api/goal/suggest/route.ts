@@ -186,6 +186,20 @@ export async function POST(req: NextRequest) {
   if (!user) {
     return NextResponse.json({ error: "ユーザーが見つかりません" }, { status: 404 });
   }
+  if (
+    user.age == null ||
+    !user.gender ||
+    user.heightCm == null ||
+    user.weightKg == null
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "体型プロフィール（年齢・性別・身長・体重）が未設定です。先にアカウント情報を登録してください。",
+      },
+      { status: 400 }
+    );
+  }
 
   const prompt = buildPrompt({
     age: user.age,

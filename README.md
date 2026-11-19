@@ -16,7 +16,24 @@ npm install
 cp .env.example .env
 ```
 
-`.env` の `GEMINI_API_KEY` を埋めてください。
+`.env` の `GEMINI_API_KEY` / `NEXTAUTH_*` /（任意）`GOOGLE_*` を埋めてください。
+
+### Google ログイン（任意）
+
+1. [Google Cloud Console](https://console.cloud.google.com/) で **新しいプロジェクト**を作成
+2. **APIとサービス → OAuth 同意画面** を設定（External、テストユーザーに自分の Gmail を追加）
+3. **認証情報 → OAuth クライアント ID**（ウェブアプリ）を作成
+4. 承認済みリダイレクト URI に追加:
+
+```text
+http://localhost:3000/api/auth/callback/google
+```
+
+5. クライアント ID / シークレットを `.env` の `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` に設定
+6. `NEXTAUTH_URL=http://localhost:3000` と `NEXTAUTH_SECRET` も設定（`openssl rand -base64 32`）
+7. `npm run dev` を再起動し、`/login` の「Googleでログイン」を試す
+
+`GOOGLE_*` が未設定の場合は Credentials（ユーザー名/パスワード）ログインのみ有効です。
 
 ## 2) DB（PostgreSQL）
 

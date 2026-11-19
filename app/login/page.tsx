@@ -14,10 +14,24 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const registered = searchParams.get("registered");
+  const authError = searchParams.get("error");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() => {
+    if (!authError) return null;
+    if (authError === "AccessDenied") {
+      return "Google ログインは拒否されました。PostgreSQL が起動しているか、`npx prisma migrate deploy` 済みかを確認してください（ユーザー作成に失敗するとこのエラーになります）。";
+    }
+    if (authError === "OAuthAccountNotLinked") {
+      return "このメールは別の方法で登録済みの可能性があります。";
+    }
+    if (authError === "Configuration") {
+      return "認証設定エラーです。GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / NEXTAUTH_URL を確認してください。";
+    }
+    return `Google ログインに失敗しました（${authError}）。もう一度お試しください。`;
+  });
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const submit = async () => {
     setError(null);
@@ -44,6 +58,17 @@ function LoginForm() {
     }
   };
 
+  const loginWithGoogle = async () => {
+    setError(null);
+    setGoogleLoading(true);
+    try {
+      await signIn("google", { callbackUrl: "/" });
+    } catch {
+      setError("Google ログインを開始できませんでした。");
+      setGoogleLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-neutral-50 p-6">
       <div className="mx-auto w-full max-w-md">
@@ -53,10 +78,27 @@ function LoginForm() {
             {registered ? (
               <p className="text-sm font-medium text-emerald-800">登録が完了しました。ログインしてください。</p>
             ) : (
-              <p className="text-sm text-neutral-600">ユーザー名とパスワードでログインします。</p>
+              <p className="text-sm text-neutral-600">
+                ユーザー名とパスワード、または Google アカウントでログインできます。
+              </p>
             )}
           </CardHeader>
           <CardContent className="space-y-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => void loginWithGoogle()}
+              disabled={loading || googleLoading}
+            >
+              {googleLoading ? "Googleへ移動中…" : "Googleでログイン"}
+            </Button>
+
+            <div className="relative py-1 text-center text-xs text-neutral-400">
+              <span className="bg-white px-2 relative z-10">または</span>
+              <span className="absolute left-0 right-0 top-1/2 border-t border-neutral-200" />
+            </div>
+
             <div>
               <label className="mb-1 block text-xs font-medium text-neutral-600">ユーザー名</label>
               <input className={inputClass} value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" />
@@ -75,7 +117,7 @@ function LoginForm() {
               />
             </div>
             {error ? <p className="text-sm text-red-700">{error}</p> : null}
-            <Button type="button" onClick={() => void submit()} disabled={loading}>
+            <Button type="button" onClick={() => void submit()} disabled={loading || googleLoading}>
               {loading ? "ログイン中…" : "ログイン"}
             </Button>
             <p className="text-center text-sm text-neutral-600">

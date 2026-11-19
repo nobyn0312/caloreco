@@ -27,7 +27,7 @@ type RowDraft = {
 };
 
 const inputClass =
-  "w-full min-w-[3.5rem] rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400";
+  "w-full min-w-[3.5rem] rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 md:text-sm";
 
 type Props = {
   logs: MealLog[];
@@ -102,7 +102,7 @@ export function MealLogCards({
                 {isEditing && draft ? (
                   <input
                     type="datetime-local"
-                    className={cn(inputClass, "text-sm")}
+                    className={inputClass}
                     value={draft.createdAt}
                     onChange={(e) =>
                       onDraftChange(log.id, { createdAt: e.target.value })
@@ -136,7 +136,6 @@ export function MealLogCards({
                   </label>
                   <Textarea
                     rows={3}
-                    className="text-sm"
                     value={draft.rawInput}
                     onChange={(e) =>
                       onDraftChange(log.id, { rawInput: e.target.value })
@@ -147,7 +146,6 @@ export function MealLogCards({
                   </label>
                   <Textarea
                     rows={2}
-                    className="text-sm"
                     value={draft.foodsLine}
                     onChange={(e) =>
                       onDraftChange(log.id, { foodsLine: e.target.value })
@@ -199,7 +197,7 @@ export function MealLogCards({
                     <input
                       type="number"
                       inputMode="decimal"
-                      className={cn(inputClass, "mt-1 px-1 text-center text-sm")}
+                      className={cn(inputClass, "mt-1 px-1 text-center")}
                       value={draftVal ?? ""}
                       onChange={(e) =>
                         onDraftChange(log.id, { [key]: e.target.value })

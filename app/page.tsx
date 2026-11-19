@@ -40,7 +40,7 @@ type RowDraft = {
 };
 
 const inputClass =
-  "w-full min-w-[3.5rem] rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400";
+  "w-full min-w-[3.5rem] rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 md:text-sm";
 
 function toDatetimeLocalValue(iso:string):string {
   const d = new Date(iso);
@@ -706,7 +706,6 @@ export default function Home() {
                     <Textarea
                       id="pending-raw"
                       rows={3}
-                      className="text-sm"
                       value={pendingRecord.draft.rawInput}
                       onChange={(e) => {
                         setPendingFormError(null);
@@ -728,7 +727,6 @@ export default function Home() {
                     <Textarea
                       id="pending-foods"
                       rows={2}
-                      className="text-sm"
                       value={pendingRecord.draft.foodsLine}
                       onChange={(e) => {
                         setPendingFormError(null);
@@ -1103,7 +1101,6 @@ export default function Home() {
                           {isEditing && draft ? (
                             <Textarea
                               rows={3}
-                              className="text-sm"
                               value={draft.rawInput}
                               onChange={(e) =>
                                 setDrafts((prev) => ({
@@ -1120,7 +1117,6 @@ export default function Home() {
                           {isEditing && draft ? (
                             <Textarea
                               rows={3}
-                              className="text-sm"
                               value={draft.foodsLine}
                               onChange={(e) =>
                                 setDrafts((prev) => ({

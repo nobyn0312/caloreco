@@ -1,6 +1,12 @@
+import type { NextRequest } from "next/server";
 import NextAuth from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getAuthOptions } from "@/lib/auth";
 
-const handler = NextAuth(authOptions);
+type RouteContext = { params: Promise<{ nextauth: string[] }> };
 
-export { handler as GET, handler as POST };
+async function auth(req: NextRequest, context: RouteContext) {
+  // 毎リクエストで options を組み立て、Vercel の GOOGLE_* を確実に反映する
+  return NextAuth(getAuthOptions())(req, context);
+}
+
+export { auth as GET, auth as POST };

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, getProviders } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -32,6 +32,18 @@ function LoginForm() {
   });
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleAvailable, setGoogleAvailable] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const providers = await getProviders();
+        setGoogleAvailable(Boolean(providers?.google));
+      } catch {
+        setGoogleAvailable(false);
+      }
+    })();
+  }, []);
 
   const submit = async () => {
     setError(null);
@@ -84,20 +96,33 @@ function LoginForm() {
             )}
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={() => void loginWithGoogle()}
-              disabled={loading || googleLoading}
-            >
-              {googleLoading ? "Googleへ移動中…" : "Googleでログイン"}
-            </Button>
+            {googleAvailable ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => void loginWithGoogle()}
+                disabled={loading || googleLoading}
+              >
+                {googleLoading ? "Googleへ移動中…" : "Googleでログイン"}
+              </Button>
+            ) : googleAvailable === false ? (
+              <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+                Google ログインは未設定です。Vercel の Environment Variables に{" "}
+                <code className="rounded bg-amber-100 px-1">GOOGLE_CLIENT_ID</code> と{" "}
+                <code className="rounded bg-amber-100 px-1">GOOGLE_CLIENT_SECRET</code>{" "}
+                を追加し、Redeploy してください。
+              </p>
+            ) : (
+              <p className="text-sm text-neutral-500">認証方法を確認中…</p>
+            )}
 
-            <div className="relative py-1 text-center text-xs text-neutral-400">
-              <span className="bg-white px-2 relative z-10">または</span>
-              <span className="absolute left-0 right-0 top-1/2 border-t border-neutral-200" />
-            </div>
+            {googleAvailable ? (
+              <div className="relative py-1 text-center text-xs text-neutral-400">
+                <span className="bg-white px-2 relative z-10">または</span>
+                <span className="absolute left-0 right-0 top-1/2 border-t border-neutral-200" />
+              </div>
+            ) : null}
 
             <div>
               <label className="mb-1 block text-xs font-medium text-neutral-600">ユーザー名</label>
